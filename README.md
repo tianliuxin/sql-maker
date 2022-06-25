@@ -2,7 +2,7 @@
 sql-maker可以通过字典配置来构造sql,通过这种方式可以实现sql代码的复用,并且可以模块化/并平化,让sql的逻辑更加清晰.其实它仅仅是通过替换字符串来达到代码生成的效果,因此其也可以被用来做其他的代码生成,类似宏处理器
 
 # 安装
-下载sql-maker源码压缩包,使用`pip install sql-maker-0.1.tar.gz`,或者解压后,运行`python setup.py install`来安装
+下载[sql-maker源码压缩包](https://github.com/tianliuxin/sql-maker/raw/master/dist/sql-maker-0.1.tar.gz),使用`pip install sql-maker-0.1.tar.gz`,或者解压后,运行`python setup.py install`来安装
 
 # 基本使用
 ```python
