@@ -1,0 +1,8 @@
+README.md
+setup.py
+sqlmaker.py
+sql_maker.egg-info/PKG-INFO
+sql_maker.egg-info/SOURCES.txt
+sql_maker.egg-info/dependency_links.txt
+sql_maker.egg-info/requires.txt
+sql_maker.egg-info/top_level.txt

@@ -7,6 +7,9 @@ setup(
     author="liuxin",
     author_email="1627094964@qq.com",
     py_modules=['sqlmaker'],
+    test_requires = [
+        'pytest'
+    ],
     install_requires=[
         'sqlparse'
     ]

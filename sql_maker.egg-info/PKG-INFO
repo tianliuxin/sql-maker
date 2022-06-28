@@ -1,0 +1,6 @@
+Metadata-Version: 2.1
+Name: sql-maker
+Version: 0.1
+Summary: 通过字典构建sql查询
+Author: liuxin
+Author-email: 1627094964@qq.com

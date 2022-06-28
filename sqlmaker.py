@@ -7,6 +7,7 @@ import re
 import sqlparse
 import json
 from typing import List, Union
+from abc import ABC,abstractmethod
 
 
 class InvokeNode:
@@ -84,7 +85,6 @@ class SqlGenerator:
         if not params[0].strip():
             return invoke_node
         for p in params:
-            print(p)
             p_name, p_value = p.split("=",maxsplit=1)
             p_name, p_value = p_name.strip(), p_value.strip()  # 清除空格
             invoke_node.parse_text = p_value  # 将待解析的parse_text设置为p_value
@@ -96,10 +96,47 @@ class SqlGenerator:
 
     def parse(self, text:str, key="") -> InvokeNode:
         '''解析text,返回解析后的节点'''
-        main_node = InvokeNode(text, key, "")
-        main_node.parse_text = text  # 设置待解析文本为text
-        main_node = self.replace_invoke_nodes(main_node)
-        return main_node
+        root_node = InvokeNode(text, key, "")
+        root_node.parse_text = text  # 设置待解析文本为text
+        root_node = self.replace_invoke_nodes(root_node)
+        return root_node
+
+class BaseFileParser(ABC):
+    '''文件解析的抽象基类'''
+    @abstractmethod
+    def parse(self,text):
+        '''parse接口'''
+        pass
+    
+    def read_file(self,file,encoding="utf-8"):
+        '''读取文件并解析'''
+        with open(file,encoding=encoding) as f:
+            text = f.read()
+        return self.parse(text)
+    
+class FileParser(BaseFileParser):
+    '''解析文件中的内容为字典
+    
+    文件需要使用@@name{body}来定义代码块,会将这部分解析为字典{"name1":"body1","name2":"body2"}
+    当前为了实现简单,使用@@来标识定义开始,其实也可以改成def,@等,另外实现可以改成SqlGenerator中的正则方式,这样会更加灵活
+    '''
+    def __init__(self):
+        self.fn_pattern = re.compile("(.*?)\{(.*)\}",flags=re.DOTALL)
+
+    def parse(self,text)->dict:
+        '''str解析为dict
+        
+        解析方法,重载这个方法可以解析不同形式的文件
+        '''
+        sep="@@"
+        def parse_fn(fn:str)->tuple:
+            fn_match = self.fn_pattern.search(fn)
+            fn_name,fn_body = fn_match.group(1).strip(),fn_match.group(2).strip()
+            return fn_name,fn_body
+
+        fns = [ parse_fn(fn) for fn in text.split(sep) if fn.strip() != "" ]
+        fns = dict(fns)
+        return fns
 
 
 class Formatter:
@@ -116,22 +153,20 @@ class Formatter:
             )
 
 
-def parse(ctx:dict):
+def parse(ctx:dict)->str:
     '''从main节点开始解析,返回解析后的文本,若要使用解析后的节点值,则应使用SqlGenerator类中的parse'''
     sql_generator = SqlGenerator(ctx)
     return sql_generator.parse(ctx['main'], "main").parse_text
 
+def parse_file(file,encoding="utf-8")->str:
+    file_parser = FileParser()
+    ctx = file_parser.read_file(file,encoding)
+    return parse(ctx)
 
 formatter = Formatter()  # formatter接口
 
 if __name__ == "__main__":
-    ctx = {
-        "main":"select (@总人数(tbl=@筛选成绩大于(score=80))) as `大于80分的人数`,(@总人数(tbl=@筛选成绩大于(score=70))) as `大于70分的人数`",
-        "筛选成绩大于":"select * from t_student where score>#{score}",
-        "总人数":"select count(*) cnt from (#{tbl}) t"
-    }
-    sql = parse(ctx)
-    print(sql)
+
 
     ctx = {
         "main":"Hello, @name()",

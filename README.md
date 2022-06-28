@@ -22,6 +22,44 @@ print(sqlmaker.parse(sql2))
 print(sqlmaker.formatter.sql_format(sqlmaker.parse(sql2))) # 格式化sql
 ```
 
+# sql文件解析
+通过@@name{body}这种语法可以在sql文件里定义语句块,再配合解析,可以更方便的编写代码
+```sql
+-- demo.sql
+
+@@sumif{
+    sum(case when score > #{score} then 1 else 0)
+}
+
+@@main{
+    select
+        @sumif(score=60) as `大于60分人数` 
+        ,@sumif(score=80) as `大于80分人数`
+    from t_score
+}
+
+```
+通过sqlmaker解析`demo.sql`
+```python
+import sqlmaker
+
+print(sqlmaker.parse_file("demo.sql"))
+```
+
+# 高级使用
+对于一些常用的,有些其实可以被抽象到多个文件中,进行模块化,但当前并没有提供`import`的功能,那是否就不能分文件组织了呢?当前可用通过`FileParser`对象中的parse方法,将文件解析为字典,通过字典的操作,进行数据的整合,这样就将名称的作用域放到了同一个字典里,便可用解析了.
+```python
+
+import sqlmaker
+
+file_parser = FileParser()
+with open("module1.sql",'r',encoding="utf8") as module1,open("main.sql",'r',encoding='utf8') as main:
+    module1_dict,main_dict = file_parser.parse(module1.read()),file_parser.parse(main.read())
+
+main_dict.update(module1_dict)
+```
+备注:可以加入简易版的`import`,但使用较少,所以暂时使用组合字典的方式,更多的应该还是单文件处理
+
 # 致谢
 该工具是看到鱼皮大佬的sql-generator项目,觉得非常有趣+有用,所以造了一个自己常用的python版的轮子.
 
